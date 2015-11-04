@@ -1,0 +1,230 @@
+<!--  
+
+Author:Hugo Toffanelo  Student ID 2012802
+URL: www.hugotoffanelo.com
+
+Created for studies propose only. 
+All rights reserved.
+
+ -->
+
+
+
+
+
+<html>
+	<head>
+		<meta charset="utf-8">
+
+		<title>Web Chat Application</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <meta name="description" content="hugotoffanelo.com Web Design Dublin Ireland +353 872863492">
+	    <meta name="author" content=" Hugo Toffanelo">
+	    <meta name="keywords" content="Web Chat, PHP, HTML, CSS, XML, XHTML, JavaScript, Hugo, Toffanelo, hugotoffanelo.com, Web Design">
+
+	    <link rel="shortcut icon" href="images/favicon5.1.ico" />  <!-- favicon  -->
+
+		<link rel="stylesheet" type="text/css" href="CSS/stylefile.css" />
+
+		<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+
+
+
+		
+		<script>
+		
+			// ------------------
+			//  GLOBAL VARIABLES
+			// ------------------
+			
+			/* This variable keeps the last message id added to the log,
+			   so it is not necessary to retrieve all the messages on every
+			   call */
+			var lastMessageId = 0;
+			
+			/* This is the interval for the automatic callings of
+			   the function getMessagesFromDB() */
+			var autoUpdateInterval = 1000;
+
+			
+			
+			// -----------
+			//  FUNCTIONS
+			// -----------
+			
+			/* Startup function. Shows loaded resources, do a first request
+			   and starts the auto-update timer */
+			function start() {
+				// Hide the spinner and show the chat
+				$("#loading").hide();
+				$("#contents").show();
+				
+				// Do a first request
+				getMessagesFromDB();
+				
+				// Enable the automatic updates
+				setInterval(getMessagesFromDB, autoUpdateInterval);
+			}
+			
+			/* Scroll the messages div to the very bottom, to show the
+			   latest message */
+			function scrollDown() {
+				var chatlog = document.getElementById('chatlog'); 
+				chatlog.scrollTop = chatlog.scrollHeight;
+			}
+			
+			/* Retrieve all messages from the database since lastMessageId.
+		 	   If there are new messages, updates and scrolls down the chatlog. */ 
+			function getMessagesFromDB() {
+				// Do a post to request all messages older than lastMessageId
+				$.post(
+						"chat.php",
+						{ action: "getmessages", lastmessageid: lastMessageId }
+					).done(function(data) {
+				        
+						// if succeded, read the returned data
+				        if (data != 0) {
+
+				        	// convert the received string into a json object
+				        	// and get the contents of the messages array
+				        	var receivedJson = $.parseJSON(data);
+				        	var arrMessages = receivedJson.messages;
+				        	
+				        	// iterate trough the messages, calling the function
+				        	// addMessageToChatlog for each one of them
+				        	for (i = 0; i < arrMessages.length; i++) {
+				        		
+				        		// add message to chatlog
+				        		var name = arrMessages[i].name;
+				        		var message = arrMessages[i].message;
+				        		var datetime = arrMessages[i].datetime;
+				        		addMessageToChatlog(name, message, datetime);
+				        		
+				        		// remember the last message read
+				        		lastMessageId = arrMessages[i].id;
+				        		
+				        	}
+				        	
+				        	// if there was any new message, scroll down!
+				        	if (arrMessages.length > 0) {
+				        		scrollDown();
+				        	}
+				        }
+				        
+				    });
+			}
+			
+			/* Add a single message to the chat log */
+			function addMessageToChatlog(name, message, datetime) {
+				// Create a <p> tag with the message contents
+				var messageTag = document.createElement("P");
+				messageTag.innerHTML = " <b>[</b> "+name+" <b>]</b> " + datetime + " -­ " + message;
+				
+				// Add the message to the chatlog div
+				var chatlog = document.getElementById('chatlog');
+				chatlog.appendChild(messageTag);
+			}
+			
+			/* Post data to the chat endpoint */
+			function postMessageToDB() {
+				// get data from the fields
+				var name = document.getElementById('name').value;
+				var message = document.getElementById('message').value;
+				
+				// post to the endpoint
+				$.post(
+					"chat.php",
+					{ action: "sendmessage", name: name, message: message }
+				).done(function(data) {
+					
+					// if succeeds, clean the message field, focus on it and
+					// update the chat log
+			        if (data == 1) {
+			        	document.getElementById('message').value = "";
+			        	document.getElementById('message').focus();
+			        	
+			        	// the request function need to be called instead of update
+			        	// the chatlog just adding lines to it using javascript,
+			        	// because some other user may have posted something
+			        	// else in the meanwhile.
+			        	getMessagesFromDB();
+			        }
+			        
+			    });
+			}
+
+			// --------
+			//  SCRIPT
+			// --------
+			
+			// Wait 5000 milisseconds and then runs the start() function
+			setTimeout(start, 5000);
+
+			// send to database by pressing enter
+
+
+
+
+	      		//clock
+			var myVar=setInterval(function(){myTimer()},1000);
+
+			function myTimer() {
+				var d = new Date();
+
+				document.getElementById("demo").innerHTML = d.toLocaleTimeString();
+			}	 
+
+    	</script>
+
+    	
+
+		
+
+
+	</head>
+	<body>
+
+
+
+		<div class="headerBox">			
+		</div>
+
+		<div class="leftColumn">		
+			<h4>ABOUT</h4>       	
+			<hr>
+			<p>IntraOffice Chat is an multi platform  feature developed only for all staff within <a href="www.hugotoffanelo.com"><strong>hugotoffanelo.com</strong></a> agency.
+				<br><br>This chat was created in order to streamline communication in between Front & Back End developers and graphic designers.</p>
+				<p>Any issue contact <a href="mailto:support@hugotoffanelo.com?Subject=IntraOffice%20Inssue" target="_top">support@hugotoffanelo.com</a></p>		
+				<p>Try to don't waste your time with unnecessary chatting!</p>
+			<strong id="demo">=)</strong>  <!-- clock -->	
+
+		</div>
+
+
+
+			<div class="rightColumn">
+				<fieldset>
+					<legend>IntraOffice Chat</legend>
+
+					<!-- The spinner starts visible -->
+					<div id="loading">
+						<h3>Loading Chat Client</h3>
+					</div>
+
+					<!-- The chat starts hidden -->
+					<div id="contents" style="display:none">
+						<div id="chatlog"></div>
+						<hr>						
+						<div id="namebox">Name: <input type="text"  id="name" autofocus autocomplete="on" ></div> <!-- autofocus; when user open up the chat, the cursor goes automatically into the input name --> 
+						<div id="msgbox" >Message: <input type="text" id="message"autocomplete="on"></div>
+						<div id="submitbox"><button onClick="postMessageToDB(); return false;" id="submit">Submit</button></div>
+					</div> 
+
+				</fieldset>				
+			</div>	
+
+
+
+		</body>
+		</html>
